@@ -1,49 +1,52 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://www.electronjs.org/" target="_blank">
-      <img src="./assets/electron.svg" class="logo electron" alt="Electron logo" />
-    </a>
-    <a href="https://vitejs.dev/" target="_blank">
-      <img src="./assets/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Electron + Vite + Vue" />
-  <div class="flex-center">
-    Place static files into the <code>/public</code> folder
-    <img style="width: 2.4em; margin-left: .4em;" src="/logo.svg" alt="Logo">
+  <h4 class="title">编辑区域</h4>
+  <div spellcheck="false" class="edit" contenteditable="true" @paste="handlePaste" ref="editable">
   </div>
 </template>
 
+<script lang="ts" setup>
+interface DataTransfer {
+    dropEffect: string;
+    effectAllowed: string;
+    files: FileList;
+    items: DataTransferItemList;
+    types: string[];
+    clearData(format?: string): void;
+    getData(format: string): string;
+    setData(format: string, data: string): void;
+    setDragImage(image: Element, x: number, y: number): void;
+}
+function handlePaste(event: ClipboardEvent) {
+  console.log('paste', event)
+  const clipboardData = event.clipboardData as DataTransfer;
+  const pastedHtml = clipboardData.getData('text/html');
+  // 处理粘贴的HTML结构
+  insertHtmlIntoEditable(pastedHtml);
+  // 阻止默认粘贴行为
+  event.preventDefault();
+}
+
+function insertHtmlIntoEditable(html: string) {
+  const range = window?.getSelection()?.getRangeAt(0);
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  range?.deleteContents();
+  range?.insertNode(div);
+}
+</script>
+
+
 <style>
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.title {
+  margin: 50px;
+  margin-bottom: 10px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
+.edit {
+  background: #f8f8f8;
+  margin: 50px;
+  margin-top: 10px;
+  padding: 10px;
 
-.logo.electron:hover {
-  filter: drop-shadow(0 0 2em #9FEAF9);
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
 }
 </style>
