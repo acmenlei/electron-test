@@ -1,9 +1,9 @@
 <template>
   <h4 class="title">剪切板内容</h4>
   <div class="list">
-    <div electron-application-slef @copy="copy" class="item" v-for="copied in copiedBoard" :key="copied.text" v-html="copied.html"></div>
+    <div electron-application-slef @copy="copy" class="item" v-for="copied in copiedBoard" :key="copied.text"
+      v-html="copied.html"></div>
   </div>
-  
 </template>
 
 <script lang="ts" setup>
@@ -24,11 +24,15 @@ function copy() {
 
 ipcRenderer.on("clipboard-changed", (event, text, html) => {
   const trim_text = text.trim()
-  if(copiedBoard.value.findIndex(item => item.text === trim_text) === -1) {
-    if(!trim_text) return
+  const pos = copiedBoard.value.findIndex(item => item.text === trim_text)
+  if (pos === -1) {
+    if (!trim_text) return
     copiedBoard.value.unshift({ text: trim_text, html })
   } else {
     console.log('交换位置到第一位')
+    const record = copiedBoard.value[pos]
+    copiedBoard.value.splice(pos, 1)
+    copiedBoard.value.unshift(record)
   }
 })
 </script>
@@ -49,6 +53,7 @@ ipcRenderer.on("clipboard-changed", (event, text, html) => {
 
 
 }
+
 .item {
   margin: 10px;
   max-width: 100%;

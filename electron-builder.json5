@@ -5,7 +5,7 @@
   $schema: "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   appId: "YourAppID",
   asar: false,
-  productName: "YourAppName",
+  productName: "Shear Pro",
   directories: {
     output: "release/${version}",
   },
