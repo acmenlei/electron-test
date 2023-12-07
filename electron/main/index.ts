@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, clipboard, globalShortcut } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 
@@ -35,10 +35,12 @@ if (!app.requestSingleInstanceLock()) {
 // process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 let win: BrowserWindow | null = null
+let lastClipboardHTML = clipboard.readText();
 // Here, you can also use other preload
 const preload = join(__dirname, '../preload/index.js')
 const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
+
 
 async function createWindow() {
   win = new BrowserWindow({
@@ -46,9 +48,6 @@ async function createWindow() {
     icon: join(process.env.VITE_PUBLIC, 'favicon.ico'),
     webPreferences: {
       preload,
-      // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
-      // Consider using contextBridge.exposeInMainWorld
-      // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
       nodeIntegration: true,
       contextIsolation: false,
     },
@@ -61,6 +60,20 @@ async function createWindow() {
   } else {
     win.loadFile(indexHtml)
   }
+
+  setInterval(() => {
+    const currentClipboardHTML = clipboard.readHTML();
+    if (currentClipboardHTML !== lastClipboardHTML) {
+      lastClipboardHTML = currentClipboardHTML;
+      // 数据发送给渲染进程
+      win.webContents.send('clipboard-changed', clipboard.readText(), currentClipboardHTML);
+    }
+  }, 1000); // 设置适当的轮询间隔
+  // 注册全局快捷键，比如 Command+V (Mac) 或者 Ctrl+V (Windows/Linux) 用于粘贴
+  // globalShortcut.register('CommandOrControl+V', () => {
+  //   const text = clipboard.readHTML();
+  //   console.log(`Pasted text: ${text}`);
+  // });
 
   // Test actively push message to the Electron-Renderer
   win.webContents.on('did-finish-load', () => {
@@ -76,6 +89,18 @@ async function createWindow() {
 }
 
 app.whenReady().then(createWindow)
+
+// app.on('will-quit', () => globalShortcut.unregisterAll())
+// 读取剪切板的时候触发
+// ipcMain.on('read-clipboard', (event) => {
+//   // 在主进程中读取剪贴板内容
+//   const text = clipboard.readHTML();
+//   console.log(text);
+
+//   // 将剪贴板内容发送给渲染进程
+//   event.sender.send('read-clipboard-response', text);
+// });
+
 
 app.on('window-all-closed', () => {
   win = null

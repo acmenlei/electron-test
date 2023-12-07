@@ -1,38 +1,36 @@
 <template>
-  <h4 class="title">编辑区域</h4>
-  <div spellcheck="false" class="edit" contenteditable="true" @paste="handlePaste" ref="editable">
+  <h4 class="title">剪切板内容</h4>
+  <div class="list">
+    <div electron-application-slef @copy="copy" class="item" v-for="copied in copiedBoard" :key="copied.text" v-html="copied.html"></div>
   </div>
+  
 </template>
 
 <script lang="ts" setup>
-interface DataTransfer {
-    dropEffect: string;
-    effectAllowed: string;
-    files: FileList;
-    items: DataTransferItemList;
-    types: string[];
-    clearData(format?: string): void;
-    getData(format: string): string;
-    setData(format: string, data: string): void;
-    setDragImage(image: Element, x: number, y: number): void;
+
+import { ipcRenderer } from "electron"
+import { ref } from "vue"
+
+
+interface BoardFormat {
+  text: string
+  html: string
 }
-function handlePaste(event: ClipboardEvent) {
-  console.log('paste', event)
-  const clipboardData = event.clipboardData as DataTransfer;
-  const pastedHtml = clipboardData.getData('text/html');
-  // 处理粘贴的HTML结构
-  insertHtmlIntoEditable(pastedHtml);
-  // 阻止默认粘贴行为
-  event.preventDefault();
+const copiedBoard = ref<BoardFormat[]>([])
+
+function copy() {
+  // 复制选中的内容
 }
 
-function insertHtmlIntoEditable(html: string) {
-  const range = window?.getSelection()?.getRangeAt(0);
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  range?.deleteContents();
-  range?.insertNode(div);
-}
+ipcRenderer.on("clipboard-changed", (event, text, html) => {
+  const trim_text = text.trim()
+  if(copiedBoard.value.findIndex(item => item.text === trim_text) === -1) {
+    if(!trim_text) return
+    copiedBoard.value.unshift({ text: trim_text, html })
+  } else {
+    console.log('交换位置到第一位')
+  }
+})
 </script>
 
 
@@ -42,11 +40,23 @@ function insertHtmlIntoEditable(html: string) {
   margin-bottom: 10px;
 }
 
-.edit {
+.list {
   background: #f8f8f8;
   margin: 50px;
   margin-top: 10px;
-  padding: 10px;
+  padding: 20px;
+  border-radius: 5px;
 
+
+}
+.item {
+  margin: 10px;
+  max-width: 100%;
+  overflow: scroll;
+  max-height: 200px;
+  border-radius: 5px;
+  padding: 10px;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 </style>
