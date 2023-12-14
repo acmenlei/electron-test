@@ -11,7 +11,11 @@
     "esModuleInterop": true,
     "lib": ["ESNext", "DOM"],
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      // "@@types/*": ["./types/*"]
+    },
   },
   "include": ["src"],
   "references": [

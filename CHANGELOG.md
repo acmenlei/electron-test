@@ -13,6 +13,8 @@
 - ⚡️ More simplify, is in line with Vite project structure
 - last-commit: a15028a (HEAD -> main) feat: hoist `process.env`
 
+![test](/Users/xiongleixin/DeskTop/grid.jpeg)
+
 ## 2022-01-30
 
 [v1.0.0](https://github.com/electron-vite/electron-vite-vue/releases/tag/v1.0.0)
