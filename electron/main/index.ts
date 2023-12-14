@@ -13,6 +13,9 @@ import {
 import { release } from "node:os";
 import { join } from "node:path";
 import fs from "fs";
+import User from "../../db"
+import clipBoardEvent from "clipboard-event";
+// console.log(clipBoardEvent)
 // import util from 'util'
 // import robot from "robotjs"
 // console.log(robot)
@@ -20,14 +23,6 @@ import fs from "fs";
 // const stat = util.promisify(fs.stat);
 
 import { exec } from "child_process";
-
-// const FORMAT = [
-//   "image/png",
-//   "image/webp",
-//   "image/jpg",
-//   "image/jpeg",
-//   "image/gif",
-// ];
 
 function getActiveApplication() {
   return new Promise((resolve, reject) => {
@@ -97,6 +92,10 @@ const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = join(process.env.DIST, "index.html");
 
 async function createWindow() {
+  // const value = await User.User.createOne({ username: 'username' + Math.floor(Math.random() * 99999),  email: Math.floor(Math.random() * 99999) + 'username@qq.com'  })
+  const value = await User.User.findAll()
+  console.log(value.length)
+
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   // console.log(height)
   win = new BrowserWindow({
@@ -113,7 +112,9 @@ async function createWindow() {
     },
     show: false,
   });
-
+  // console.log(clipBoardEvent.startListening())
+  clipBoardEvent.startListening();
+  clipBoardEvent.on("change", getClipBoardContent);
   // win.setBounds({ x: 0, y: height - 200 });
   const max = height - 200;
   let curr = height + 300;
@@ -134,22 +135,17 @@ async function createWindow() {
     app.dock.hide();
   }
   // win.setSkipTaskbar(true);
-
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(url);
     win.webContents.openDevTools();
   } else {
     win.loadFile(indexHtml);
   }
-
-  // globalShortcut.register("CommandOrControl+R", () => {
-  //   win.isVisible() ? win.hide() : win.show();
-  // });
   /* 文件转base64 */
   function fileToBase64(filePath) {
     try {
       // 剔除file:// 前缀
-      console.log(filePath.slice(7))
+      console.log(filePath.slice(7));
       // 读取文件内容
       const fileContent = fs.readFileSync(filePath.slice(7));
       // 将文件内容转换为 base64 格式
@@ -160,70 +156,49 @@ async function createWindow() {
       return dataUri;
     } catch (error) {
       console.error("Error reading file:", error.message);
-      return '';
+      return "";
     }
   }
 
-  setInterval(async () => {
-    const currentClipboardHTML = clipboard.readHTML();
-    const availableFormats = clipboard.availableFormats();
-    const allWindows = BrowserWindow.getAllWindows();
-    const active = await getActiveApplication();
-    // console.log(availableFormats);
-    // 读取剪贴板中的数据
-    // const clipboardData = clipboard.readText('clipboard');
-    // console.log(clipboardData)
-    // 解析 uri-list 数据
-    // const fileUris = clipboardData
-    //   .split("\n")
-    //   .filter((line) => line.trim() !== "");
-    // console.log(fileUris, join(app.getAppPath(), clipboardData))
-    // 截图 / 复制图片？
-    if (
-      availableFormats.includes("image/png") ||
-      availableFormats.includes("text/uri-list")
-    ) {
-      // console.log(clipboard.read('NSFilenamesPboardType'))
-      const url = availableFormats.includes("image/png")
-        ? clipboard.readImage().toDataURL()
-        : fileToBase64(clipboard.read("public.file-url"));
-      if (!allWindows.length || lastImageInfo === url) return;
-      lastImageInfo = url;
-      allWindows[0].webContents.send("clipboard-changed", {
-        type: "image",
-        url,
-        active,
-      });
-    } else {
-      if (availableFormats.includes("text/uri-list")) {
+  async function getClipBoardContent() {
+    {
+      const currentClipboardHTML = clipboard.readHTML();
+      const availableFormats = clipboard.availableFormats();
+      const allWindows = BrowserWindow.getAllWindows();
+      const active = await getActiveApplication();
+
+      // 截图 / 复制图片？
+      if (
+        availableFormats.includes("image/png") ||
+        availableFormats.includes("text/uri-list")
+      ) {
         // console.log(clipboard.read('NSFilenamesPboardType'))
-        // const url = clipboard.read('public.file-url')
-        // lastImageInfo = url;
-
-        // console.log(clipboard.read('public.file-url'))
-        // console.log(clipboard.read('public.file-url'))
-
-        return;
-      }
-      // 走复制内容
-      if (currentClipboardHTML !== lastClipboardHTML) {
-        lastClipboardHTML = currentClipboardHTML;
-        // 数据发送给渲染进程
-        if (!allWindows.length) return;
+        const url = availableFormats.includes("image/png")
+          ? clipboard.readImage().toDataURL()
+          : fileToBase64(clipboard.read("public.file-url"));
+        if (!allWindows.length || lastImageInfo === url) return;
+        lastImageInfo = url;
         allWindows[0].webContents.send("clipboard-changed", {
-          type: "plain",
-          text: clipboard.readText(),
-          html: currentClipboardHTML,
+          type: "image",
+          url,
           active,
         });
+      } else {
+        // 走复制内容
+        if (currentClipboardHTML !== lastClipboardHTML) {
+          lastClipboardHTML = currentClipboardHTML;
+          // 数据发送给渲染进程
+          if (!allWindows.length) return;
+          allWindows[0].webContents.send("clipboard-changed", {
+            type: "plain",
+            text: clipboard.readText(),
+            html: currentClipboardHTML,
+            active,
+          });
+        }
       }
     }
-  }, 500); // 设置适当的轮询间隔
-  // 注册全局快捷键，比如 Command+V (Mac) 或者 Ctrl+V (Windows/Linux) 用于粘贴
-  // globalShortcut.register('CommandOrControl+V', () => {
-  //   const text = clipboard.readHTML();
-  //   console.log(`Pasted text: ${text}`);
-  // });
+  }
 
   // Test actively push message to the Electron-Renderer
   win.webContents.on("did-finish-load", () => {
@@ -261,6 +236,9 @@ async function createWindow() {
   ipcMain.on("show-context-menu", (event, position) => {
     contextMenu.popup({ window: win, ...position });
   });
+
+  // console.log("init")
+  
   // win.webContents.on('will-navigate', (event, url) => { }) #344
 }
 
