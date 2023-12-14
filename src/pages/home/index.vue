@@ -1,7 +1,5 @@
 <template>
   <!-- 应用程序信息展示 -->
-  <!-- <div class="info">
-    </div> -->
   <div class="board">
     <div class="action">
       <input type="text">
@@ -17,7 +15,6 @@
         <p class="title">活跃应用：{{ copied.active }}</p>
         <div class="content" v-if="copied.type === 'plain'" v-html="copied.text"></div>
         <img v-else :src="copied.url" />
-        <!-- {{ copied.url || '' }} -->
       </div>
     </div>
   </div>
@@ -26,11 +23,16 @@
 <script lang="ts" setup>
 import { ipcRenderer } from "electron"
 import { ref } from "vue"
-import { useRouter } from "vue-router";
-
+// import { useRouter } from "vue-router";
+// ipcRenderer.on('toggle-window', () => {
+//   const content = document.getElementById('app');
+//   // console.log(content)
+//   const isVisible = content.style.transform === 'translateY(0%)' || !content.style.transform;
+//   content.style.transform = isVisible ? 'translateY(100%)' : 'translateY(0%)';
+// });
 const tags = ['链接', '自定义标签']
 
-const router = useRouter()
+// const router = useRouter()
 
 interface BoardFormat {
   type: string
@@ -56,25 +58,9 @@ function contextMenu(e: any, idx: number) {
 const active = ref(0)
 
 function select(idx: number) {
-  // console.log('select')
   active.value = idx
 }
 
-function openApplication() {
-  // ipcRenderer.send("open-application")
-  router.push('/profile')
-}
-
-ipcRenderer.on('selected-file', (event, fileInformation) => {
-  // alert('Selected File: ' + filePath);
-  console.log(fileInformation)
-  document.querySelector('.info')!.innerHTML = `
-          <p>Path: ${fileInformation.path}</p>
-          <p>Size: ${fileInformation.size} bytes</p>
-          <p>Last Modified: ${fileInformation.lastModified}</p>
-          <img src="${fileInformation.icon}" alt="File Icon">
-        `
-});
 ipcRenderer.on("clipboard-changed", (event, origin) => {
   // 如果是图片
   if (origin.type === 'image') {
@@ -93,8 +79,6 @@ ipcRenderer.on("clipboard-changed", (event, origin) => {
     copiedBoard.value.splice(pos, 1)
     copiedBoard.value.unshift(record)
   }
-  // console.log(text)
-  // console.log(html)
 })
 </script>
 
@@ -128,7 +112,7 @@ input:focus {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 23px;
 }
 
 .tags {

@@ -1,0 +1,23 @@
+/* #app {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.15s ease-in-out;
+} */
+
+@keyframes show {
+  from {
+      transform: translateY(320px);
+  }
+  to {
+      transform: translateY(0);
+  }
+}
+
+@keyframes hide {
+  from {
+      transform: translateY(0) ;
+  }
+  to {
+      transform: translateY(320px);
+  }
+} 

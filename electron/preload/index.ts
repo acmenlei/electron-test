@@ -1,3 +1,4 @@
+import { ipcRenderer } from "electron";
 function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']) {
   return new Promise((resolve) => {
     if (condition.includes(document.readyState)) {
@@ -90,3 +91,18 @@ window.onmessage = (ev) => {
 }
 
 setTimeout(removeLoading, 4999)
+
+
+
+// // 对应下面的 win.webContents.send("show");
+// // 默认有个 event 事件参数
+ipcRenderer.on("show", (e, s: number) => {
+    const root = document.querySelector("#app") as HTMLElement;
+    root.style.animation = `show ${s}s ease-in-out`;
+});
+
+// 对应下面的 win.webContents.send("hide", s);
+ipcRenderer.on("hide", (e, s: number) => {
+    const root = document.querySelector("#app") as HTMLElement;
+    root.style.animation = `hide ${s}s ease-in-out `;
+});

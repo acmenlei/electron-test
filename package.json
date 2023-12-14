@@ -39,6 +39,8 @@
     "vue-tsc": "^1.8.8"
   },
   "dependencies": {
+    "electron-rebuild": "^3.2.9",
+    "robotjs": "^0.6.0",
     "sequelize": "^6.35.2",
     "sqlite3": "^5.1.6"
   }

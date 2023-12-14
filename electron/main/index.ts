@@ -7,65 +7,16 @@ import {
   clipboard,
   screen,
   globalShortcut,
-  dialog,
   Menu,
 } from "electron";
 import { release } from "node:os";
 import { join } from "node:path";
 import fs from "fs";
-import User from "../../db"
+// import User from "../../db"
 import clipBoardEvent from "clipboard-event";
-// console.log(clipBoardEvent)
-// import util from 'util'
-// import robot from "robotjs"
-// console.log(robot)
-// import appInfo from "appinfo"
-// const stat = util.promisify(fs.stat);
 
-import { exec } from "child_process";
+import { getActiveApplication, getPreviousAppName, paste } from "../utils";
 
-function getActiveApplication() {
-  return new Promise((resolve, reject) => {
-    if (process.platform === "darwin") {
-      exec(
-        'osascript -e "tell application \\"System Events\\" to get name of first process whose frontmost is true"',
-        (error, stdout, stderr) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(stdout.trim());
-          }
-        }
-      );
-    } else if (process.platform === "win32") {
-      exec("tasklist /fo csv /v", (error, stdout, stderr) => {
-        if (error) {
-          reject(error);
-        } else {
-          const processes = stdout
-            .split("\n")
-            .map((line) => line.split('","'))
-            .map((fields) => ({
-              name: fields[0].replace(/"/g, ""),
-              title: fields[7].replace(/"/g, ""),
-              status: fields[8].replace(/"/g, ""),
-            }));
-
-          const activeProcess = processes.find(
-            (process) =>
-              process.status === "Running" && process.title === "Console"
-          );
-
-          if (activeProcess) {
-            resolve(activeProcess.name);
-          } else {
-            resolve(null);
-          }
-        }
-      });
-    }
-  });
-}
 process.env.DIST_ELECTRON = join(__dirname, "..");
 process.env.DIST = join(process.env.DIST_ELECTRON, "../dist");
 process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
@@ -84,8 +35,10 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 let win: BrowserWindow | null = null;
-let lastClipboardHTML = clipboard.readText(),
+let lastClipboardHTML = "",
   lastImageInfo = "";
+const s = 0.2; // 窗口切换动画速度
+
 // Here, you can also use other preload
 const preload = join(__dirname, "../preload/index.js");
 const url = process.env.VITE_DEV_SERVER_URL;
@@ -93,9 +46,8 @@ const indexHtml = join(process.env.DIST, "index.html");
 
 async function createWindow() {
   // const value = await User.User.createOne({ username: 'username' + Math.floor(Math.random() * 99999),  email: Math.floor(Math.random() * 99999) + 'username@qq.com'  })
-  const value = await User.User.findAll()
-  console.log(value.length)
-
+  // const value = await User.User.findAll()
+  // console.log(value.length)
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   // console.log(height)
   win = new BrowserWindow({
@@ -103,41 +55,67 @@ async function createWindow() {
     height: 320,
     resizable: false,
     frame: false,
+    darkTheme: true,
     title: "CopyPro",
+    type: "textured",
+    // focusable: false,
+    hasShadow: false,
     icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
+    skipTaskbar: true, // 窗口是否不显示在任务栏上面
+    // alwaysOnTop: true, // 窗口置顶
+    transparent: true, // 窗口透明
     webPreferences: {
       preload,
       nodeIntegration: true,
       contextIsolation: false,
+      backgroundThrottling: false, // 后台挂起的时候禁止一些操作
     },
     show: false,
+  });
+  /* 快速唤出/隐藏快捷键 */
+  globalShortcut.register("CommandOrControl+O", () => {
+    // ipcMain.emit
+    // ipcMain.emit('toggle-window')
+    const allWindows = BrowserWindow.getAllWindows();
+    if (!allWindows.length) return;
+    let win = allWindows[0];
+    // allWindows[0].webContents.send('toggle-window')
+    if (!win.isVisible()) {
+      // win.setPosition(...aboveTrayPosition(win, tray));
+      win.show();
+      // 展示加载动画
+      win.webContents.send("show", s);
+    } else {
+      // 展示退出动画
+      win.webContents.send("hide", s);
+      // 退出动画加载完之后再隐藏程序
+      setTimeout(() => win.hide(), s * 1000);
+    }
+  });
+  // win.on("focus", () => {
+  //   // 当窗口获得焦点时触发的事件
+  //   console.log("Window focused");
+  // });
+  // 失去焦点 关闭窗口
+  win.on("blur", () => {
+    // 展示退出动画
+    const allWindows = BrowserWindow.getAllWindows();
+    if (!allWindows.length) return;
+    let win = allWindows[0];
+    win.webContents.send("hide", s);
+    // 退出动画加载完之后再隐藏程序
+    setTimeout(() => win.hide(), s * 1000);
   });
   // console.log(clipBoardEvent.startListening())
   clipBoardEvent.startListening();
   clipBoardEvent.on("change", getClipBoardContent);
-  // win.setBounds({ x: 0, y: height - 200 });
-  const max = height - 200;
-  let curr = height + 300;
-  let timer = setInterval(() => {
-    if (win.isClosable()) {
-      win.show();
-    }
-    if (curr === max) {
-      clearInterval(timer);
-      return;
-    }
-    curr -= 10;
-    win.setBounds({ x: 0, y: curr });
-  });
-  // win.setAlwaysOnTop(true);
+  win.setBounds({ x: 0, y: height });
+  win.setAlwaysOnTop(true);
   // 隐藏 macOS 应用图标
-  if (app.dock) {
-    app.dock.hide();
-  }
-  // win.setSkipTaskbar(true);
+  // app.dock && app.dock.hide()
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(url);
-    win.webContents.openDevTools();
+    // win.webContents.openDevTools();
   } else {
     win.loadFile(indexHtml);
   }
@@ -166,7 +144,6 @@ async function createWindow() {
       const availableFormats = clipboard.availableFormats();
       const allWindows = BrowserWindow.getAllWindows();
       const active = await getActiveApplication();
-
       // 截图 / 复制图片？
       if (
         availableFormats.includes("image/png") ||
@@ -199,24 +176,22 @@ async function createWindow() {
       }
     }
   }
-
   // Test actively push message to the Electron-Renderer
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", new Date().toLocaleString());
   });
-
   // Make all links open with the browser, not with the application
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("https:")) shell.openExternal(url);
     return { action: "deny" };
   });
-
   app.on("browser-window-focus", () => {
     const focusedWindow = BrowserWindow.getFocusedWindow();
     if (focusedWindow) {
       console.log("Focused Window:", focusedWindow.getTitle());
     }
   });
+  // 右键菜单
   const contextMenuTemplate = [
     { label: "菜单项1", click: () => console.log("点击了菜单项1") },
     { label: "菜单项2", click: () => console.log("点击了菜单项2") },
@@ -236,17 +211,16 @@ async function createWindow() {
   ipcMain.on("show-context-menu", (event, position) => {
     contextMenu.popup({ window: win, ...position });
   });
-
   // console.log("init")
-  
   // win.webContents.on('will-navigate', (event, url) => { }) #344
 }
 
 app.whenReady().then(createWindow);
-
-ipcMain.on("use-copy-content", (_event, copied) => {
+ipcMain.on("use-copy-content", async (_event, copied) => {
   // console.log(copied)
   clipboard.writeText(copied);
+  // 获取上一个焦点应用并粘贴
+  paste();
 });
 
 ipcMain.on("open-application", (event) => {
@@ -262,7 +236,6 @@ ipcMain.on("open-application", (event) => {
     body: NOTIFICATION_BODY,
   }).show();
   // 插入内容
-
   // dialog.showOpenDialog({
   //   properties: ['openFile'],
   //   filters: [
