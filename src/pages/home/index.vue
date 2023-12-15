@@ -12,7 +12,10 @@
       <div draggable="true" @contextmenu="contextMenu($event, idx)" @click="select(idx)"
         :class="{ active: active === idx }" @dblclick="dbclick(copied.text)" class="item"
         v-for="(copied, idx) in copiedBoard" :key="copied.text || copied.url">
-        <p class="title">活跃应用：{{ copied.active }}</p>
+        <div class="title">
+          <p>内容来源：{{ copied.active }}</p>
+          <img src="/logo.png" style="position: absolute;right: -40%;top: 0;">
+        </div>
         <div class="content" v-if="copied.type === 'plain'" v-text="copied.text"></div>
         <img v-else :src="copied.url" />
       </div>
@@ -24,7 +27,7 @@
 import { ipcRenderer } from "electron"
 import { nextTick, onMounted, onUnmounted, ref } from "vue"
 
-const tags = ['链接', '自定义标签']
+const tags = ['没用的标签', '自定义标签']
 
 interface BoardFormat {
   type: string
@@ -33,6 +36,8 @@ interface BoardFormat {
   url?: string
   active: string
 }
+
+
 const copiedBoard = ref<BoardFormat[]>([])
 
 // 键盘监听
@@ -144,8 +149,7 @@ ipcRenderer.on('use-hot-key', (event, i: number) => {
 
 .board {
   padding: 10px;
-  background: rgb(214, 235, 255);
-
+  background: rgb(241, 240, 240)
 }
 
 input {
@@ -180,8 +184,8 @@ input:focus {
 .tags li {
   cursor: pointer;
   margin-left: 10px;
-  background: #fc8989;
-  color: #fff;
+  background: #00b3ff;
+  color: #f8f8f8;
   padding: 2px;
   border-radius: 5px;
   font-size: 12px;
@@ -220,7 +224,7 @@ input:focus {
 }
 
 .title {
-  background: skyblue;
+  background: #00b3ff;
   position: absolute;
   width: 100%;
   font-size: 13px;
