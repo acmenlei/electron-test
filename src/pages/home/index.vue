@@ -20,10 +20,9 @@
   </div>
 </template>
 
-
 <script lang="ts" setup>
 import { ipcRenderer } from "electron"
-import { onMounted, onUnmounted, ref } from "vue"
+import { nextTick, onMounted, onUnmounted, ref } from "vue"
 
 const tags = ['链接', '自定义标签']
 
@@ -43,11 +42,44 @@ function handleKeyDown(event: any) {
   const isCommandOrCtrlKey = event.metaKey || event.ctrlKey;
   // 检测是否按下了 'C' 键
   const isCKey = event.key === 'c' || event.keyCode === 67;
+  // 如果是 'Enter' 键
+  const isEnter = event.key === 'Enter'
+  // 是否是左键
+  const isLeft = event.key === 'ArrowLeft'
+  // 是否是右键
+  const isRight = event.key === 'ArrowRight'
+
+  if (isLeft) {
+    active.value = (active.value - 1 + copiedBoard.value.length) % copiedBoard.value.length
+    scrollToItem()
+    return
+  }
+
+  if (isRight) {
+    active.value = (active.value + 1) % copiedBoard.value.length
+    scrollToItem()
+    return
+  }
+
   // 如果同时按下了 Command/Ctrl 键和 'C' 键，则执行相应的操作
-  if (isCommandOrCtrlKey && isCKey) {
-    dbclick(copiedBoard.value[active.value].text)
+  if (isEnter || (isCommandOrCtrlKey && isCKey)) {
+    const post = copiedBoard.value[active.value]
+    if (!post) {
+      return
+    }
+    dbclick(post.text)
   }
 }
+
+function scrollToItem() {
+  nextTick(() => {
+    const item = document.querySelector(".list .active")
+    if (item) {
+      item.scrollIntoView({ block: "nearest", behavior: 'smooth' })
+    }
+  })
+}
+
 
 onMounted(() => {
   document.addEventListener('keydown', handleKeyDown)

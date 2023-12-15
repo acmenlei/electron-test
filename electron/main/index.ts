@@ -10,6 +10,7 @@ import {
   Menu,
 } from "electron";
 import { release } from "node:os";
+import { playSounds } from "./sound";
 import { join } from "node:path";
 import fs from "fs";
 // import { User } from "../../src/db";
@@ -88,6 +89,7 @@ async function createWindow() {
   });
   clipBoardEvent.startListening();
   clipBoardEvent.on("change", () => {
+    playSounds();
     console.log("内容发生变更了");
     getClipBoardContent();
   });
