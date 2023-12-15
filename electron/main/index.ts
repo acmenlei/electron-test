@@ -76,35 +76,6 @@ async function createWindow() {
     },
   });
 
- function throttle(func, delay) {
-    let lastTime = 0;
-    return function (...args) {
-      const now = Date.now();
-      if (now - lastTime >= delay) {
-        func.apply(this, args);
-        lastTime = now;
-      }
-    };
-  }
-
-  // const fn 
-  /* 快速唤出/隐藏快捷键 */
-  globalShortcut.register("CommandOrControl+O", () => {
-    // ipcMain.emit('toggle-window')
-    const allWindows = BrowserWindow.getAllWindows();
-    if (!allWindows.length) return;
-    let win = allWindows[0];
-    if (!win.isVisible()) {
-      win.show();
-      // 展示加载动画
-      win.webContents.send("show", s);
-    } else {
-      // 展示退出动画
-      win.webContents.send("hide", s);
-      // 退出动画加载完之后再隐藏程序
-      setTimeout(() => win.hide(), s * 1000);
-    }
-  });
   // 失去焦点 关闭窗口
   win.on("blur", () => {
     // 展示退出动画
@@ -130,7 +101,7 @@ async function createWindow() {
   } else {
     win.loadFile(indexHtml);
   }
-  /* 文件转base64 */
+  // 文件转base64
   function fileToBase64(filePath) {
     try {
       // 剔除file:// 前缀
@@ -148,7 +119,7 @@ async function createWindow() {
       return "";
     }
   }
-
+  // 获取剪切板内容
   async function getClipBoardContent() {
     {
       const currentClipboardHTML = clipboard.readHTML();
@@ -224,15 +195,50 @@ async function createWindow() {
   });
   // console.log("init")
   // win.webContents.on('will-navigate', (event, url) => { }) #344
+
+  /* 快捷键注册 */
+
+  // 快速唤出/隐藏快捷键
+  globalShortcut.register("CommandOrControl+O", () => {
+    const allWindows = BrowserWindow.getAllWindows();
+    if (!allWindows.length) return;
+    let win = allWindows[0];
+    if (!win.isVisible()) {
+      win.show();
+      // 展示加载动画
+      win.webContents.send("show", s);
+    } else {
+      // 展示退出动画
+      win.webContents.send("hide", s);
+      // 退出动画加载完之后再隐藏程序
+      setTimeout(() => win.hide(), s * 1000);
+    }
+  });
+
+  for (let i = 1; i < 10; ++i) {
+    globalShortcut.register("CommandOrControl+" + i, () => {
+      console.log(i);
+      const allWindows = BrowserWindow.getAllWindows();
+      if (!allWindows.length) return;
+      let win = allWindows[0];
+      win.webContents.send("use-hot-key", i);
+    });
+  }
 }
 
 app.whenReady().then(createWindow);
-ipcMain.on("use-copy-content", async (_event, copied) => {
+
+ipcMain.on("use-copy-content", async (_event, copied, hotKey) => {
   // console.log(copied)
   clipboard.writeText(copied);
   // 获取上一个焦点应用并粘贴
-  paste();
+  paste(Boolean(hotKey));
 });
+
+// ipcMain.on("use-hot-key-content", async (_event, hotKey) => {
+//   // 获取上一个焦点应用并粘贴
+//   paste(Boolean(hotKey));
+// });
 
 ipcMain.on("open-application", (event) => {
   // robotjs.typeString('我是内容')
@@ -247,21 +253,6 @@ ipcMain.on("open-application", (event) => {
     body: NOTIFICATION_BODY,
   }).show();
   // 插入内容
-  // dialog.showOpenDialog({
-  //   properties: ['openFile'],
-  //   filters: [
-  //     { name: 'Applications', extensions: ['exe', 'app'] }
-  //   ]
-  // }).then(async result => {
-  //   // result.filePaths 包含用户选择的文件路径
-  //   if (!result.canceled && result.filePaths.length > 0) {
-  //     const filePath = result.filePaths[0];
-  //     const info = getAppInformation(filePath)
-  //     event.reply('selected-file', info);
-  //   }
-  // }).catch(err => {
-  //   console.log(err);
-  // });
 });
 
 app.on("window-all-closed", () => {
@@ -302,3 +293,14 @@ ipcMain.handle("open-win", (_, arg) => {
     childWindow.loadFile(indexHtml, { hash: arg });
   }
 });
+
+function throttle(func, delay) {
+  let lastTime = 0;
+  return function (...args) {
+    const now = Date.now();
+    if (now - lastTime >= delay) {
+      func.apply(this, args);
+      lastTime = now;
+    }
+  };
+}

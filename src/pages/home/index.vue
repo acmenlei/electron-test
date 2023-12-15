@@ -13,7 +13,7 @@
         :class="{ active: active === idx }" @dblclick="dbclick(copied.text)" class="item"
         v-for="(copied, idx) in copiedBoard" :key="copied.text || copied.url">
         <p class="title">活跃应用：{{ copied.active }}</p>
-        <div class="content" v-if="copied.type === 'plain'" v-html="copied.text"></div>
+        <div class="content" v-if="copied.type === 'plain'" v-text="copied.text"></div>
         <img v-else :src="copied.url" />
       </div>
     </div>
@@ -38,7 +38,7 @@ const copiedBoard = ref<BoardFormat[]>([])
 
 // 键盘监听
 function handleKeyDown(event: any) {
-  console.log('执行')
+  console.log('触发键盘执行操作')
   // 检测是否按下了 Command 键 (Mac) 或 Ctrl 键 (Windows/Linux)
   const isCommandOrCtrlKey = event.metaKey || event.ctrlKey;
   // 检测是否按下了 'C' 键
@@ -58,7 +58,6 @@ onUnmounted(() => {
 })
 
 function dbclick(copied?: string) {
-  // 复制选中的内容
   // console.log('dbclick 通知操作')
   ipcRenderer.send('use-copy-content', copied || '我是图片');
 }
@@ -88,14 +87,21 @@ ipcRenderer.on("clipboard-changed", (event, origin) => {
     if (!trim_text) return
     copiedBoard.value.unshift({ type: origin.type, url: origin.url, ...origin, text: trim_text })
   } else {
-    // console.log('交换位置到第一位')
-    const record = copiedBoard.value[pos]
-    copiedBoard.value.splice(pos, 1)
-    copiedBoard.value.unshift(record)
+    console.log('交换位置到第一位')
+    // const record = copiedBoard.value[pos]
+    // copiedBoard.value.splice(pos, 1)
+    // copiedBoard.value.unshift(record)
   }
 })
-</script>
 
+ipcRenderer.on('use-hot-key', (event, i: number) => {
+  console.log('接收到热键', i)
+  if (copiedBoard.value.length > i - 1) {
+    ipcRenderer.send('use-copy-content', copiedBoard.value[i - 1].text || '我是图片', true);
+  }
+})
+
+</script>
 
 <style>
 * {
@@ -107,6 +113,7 @@ ipcRenderer.on("clipboard-changed", (event, origin) => {
 .board {
   padding: 10px;
   background: rgb(214, 235, 255);
+
 }
 
 input {

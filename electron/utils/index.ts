@@ -1,20 +1,23 @@
 import robot from "robotjs";
 import { exec } from "child_process";
 
-export async function getPreviousAppName() {
-  // 模拟按下 Command + Tab 来切换应用
-  robot.keyTap("tab", ["command"]);
-  // 模拟释放按键
-  robot.keyToggle("tab", "up");
-  // 延迟粘贴（让应用先获取焦点）
-  setTimeout(() => robot.keyTap("v", ["command"]), 100)
-  const active = await getActiveApplication();
-  return active;
-}
+export async function getPreviousAppName() {}
 
-export async function paste() {
-  const app = await getPreviousAppName();
-  console.log(app);
+export async function paste(hotKey?: boolean) {
+  // 模拟按下 Command + Tab 来切换应用
+  if (!hotKey) {
+    robot.keyTap("tab", ["command"]);
+    // 模拟释放按键
+    robot.keyToggle("tab", "up");
+  }
+  // 延迟粘贴（让应用先获取焦点）
+  if (!hotKey) {
+    setTimeout(() => robot.keyTap("v", ["command"]), 100);
+  } else {
+    robot.keyTap("v", ["command"]);
+  }
+  const active = await getActiveApplication();
+  console.log(active);
 }
 
 export function getActiveApplication() {
