@@ -23,16 +23,8 @@
 <script lang="ts" setup>
 import { ipcRenderer } from "electron"
 import { ref } from "vue"
-// import { useRouter } from "vue-router";
-// ipcRenderer.on('toggle-window', () => {
-//   const content = document.getElementById('app');
-//   // console.log(content)
-//   const isVisible = content.style.transform === 'translateY(0%)' || !content.style.transform;
-//   content.style.transform = isVisible ? 'translateY(100%)' : 'translateY(0%)';
-// });
-const tags = ['链接', '自定义标签']
 
-// const router = useRouter()
+const tags = ['链接', '自定义标签']
 
 interface BoardFormat {
   type: string

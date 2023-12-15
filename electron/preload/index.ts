@@ -92,8 +92,6 @@ window.onmessage = (ev) => {
 
 setTimeout(removeLoading, 4999)
 
-
-
 // // 对应下面的 win.webContents.send("show");
 // // 默认有个 event 事件参数
 ipcRenderer.on("show", (e, s: number) => {

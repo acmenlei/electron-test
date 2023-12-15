@@ -4,14 +4,15 @@ import Model from "./models/User";
 
 const sequelize = new Sequelize({
   dialect: "sqlite",
-  storage: join(__dirname, '..', 'database.sqlite'), // 指定 SQLite 数据库文件路径
+  // storage: join(__dirname, 'database.sqlite'), // 指定 SQLite 数据库文件路径
+  storage: '/Users/xiongleixin/Desktop/database.sqlite', // 指定 SQLite 数据库文件路径
 });
 
 const User = Model(sequelize);
 
 // 进行同步，创建表
 sequelize
-  .sync()
+  .sync({ force: false })
   .then(() => {
     console.log("Database synced");
   })
@@ -19,4 +20,4 @@ sequelize
     console.error("Error syncing database:", err);
   });
 
-export default { sequelize, User };
+export { sequelize, User };

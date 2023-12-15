@@ -12,10 +12,10 @@ import {
 import { release } from "node:os";
 import { join } from "node:path";
 import fs from "fs";
-// import User from "../../db"
+import { User } from "../../src/db";
 import clipBoardEvent from "clipboard-event";
 
-import { getActiveApplication, getPreviousAppName, paste } from "../utils";
+import { getActiveApplication, paste } from "../utils";
 
 process.env.DIST_ELECTRON = join(__dirname, "..");
 process.env.DIST = join(process.env.DIST_ELECTRON, "../dist");
@@ -23,6 +23,7 @@ process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
   ? join(process.env.DIST_ELECTRON, "../public")
   : process.env.DIST;
 
+app.disableHardwareAcceleration();
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith("6.1")) app.disableHardwareAcceleration();
 
@@ -37,7 +38,7 @@ if (!app.requestSingleInstanceLock()) {
 let win: BrowserWindow | null = null;
 let lastClipboardHTML = "",
   lastImageInfo = "";
-const s = 0.2; // 窗口切换动画速度
+const s = 0.12; // 窗口切换动画速度
 
 // Here, you can also use other preload
 const preload = join(__dirname, "../preload/index.js");
@@ -45,9 +46,14 @@ const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = join(process.env.DIST, "index.html");
 
 async function createWindow() {
-  // const value = await User.User.createOne({ username: 'username' + Math.floor(Math.random() * 99999),  email: Math.floor(Math.random() * 99999) + 'username@qq.com'  })
-  // const value = await User.User.findAll()
-  // console.log(value.length)
+  setTimeout(async () => {
+    const value = await User.create({
+      username: "username" + Math.floor(Math.random() * 99999),
+      email: Math.floor(Math.random() * 99999) + "username@qq.com",
+    });
+    // const value = await User.User.findAll()
+    console.log(value.dataValues);
+  }, 1000);
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   // console.log(height)
   win = new BrowserWindow({
@@ -74,14 +80,11 @@ async function createWindow() {
   });
   /* 快速唤出/隐藏快捷键 */
   globalShortcut.register("CommandOrControl+O", () => {
-    // ipcMain.emit
     // ipcMain.emit('toggle-window')
     const allWindows = BrowserWindow.getAllWindows();
     if (!allWindows.length) return;
     let win = allWindows[0];
-    // allWindows[0].webContents.send('toggle-window')
     if (!win.isVisible()) {
-      // win.setPosition(...aboveTrayPosition(win, tray));
       win.show();
       // 展示加载动画
       win.webContents.send("show", s);
@@ -92,10 +95,6 @@ async function createWindow() {
       setTimeout(() => win.hide(), s * 1000);
     }
   });
-  // win.on("focus", () => {
-  //   // 当窗口获得焦点时触发的事件
-  //   console.log("Window focused");
-  // });
   // 失去焦点 关闭窗口
   win.on("blur", () => {
     // 展示退出动画
@@ -106,9 +105,11 @@ async function createWindow() {
     // 退出动画加载完之后再隐藏程序
     setTimeout(() => win.hide(), s * 1000);
   });
-  // console.log(clipBoardEvent.startListening())
   clipBoardEvent.startListening();
-  clipBoardEvent.on("change", getClipBoardContent);
+  clipBoardEvent.on("change", () => {
+    console.log("内容发生变更了");
+    getClipBoardContent();
+  });
   win.setBounds({ x: 0, y: height });
   win.setAlwaysOnTop(true);
   // 隐藏 macOS 应用图标
