@@ -56,13 +56,13 @@ function handleKeyDown(event: any) {
 
   if (isLeft) {
     active.value = (active.value - 1 + copiedBoard.value.length) % copiedBoard.value.length
-    scrollToItem()
+   setTimeout(scrollToItem);
     return
   }
 
   if (isRight) {
     active.value = (active.value + 1) % copiedBoard.value.length
-    scrollToItem()
+    setTimeout(scrollToItem);
     return
   }
 
@@ -79,6 +79,7 @@ function handleKeyDown(event: any) {
 function scrollToItem() {
   nextTick(() => {
     const item = document.querySelector(".list .active")
+    // console.log(item)
     if (item) {
       item.scrollIntoView({ block: "nearest", behavior: 'smooth' })
     }

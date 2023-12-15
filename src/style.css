@@ -22,7 +22,3 @@
       transform: translateY(100%);
   }
 } 
-
-html {
-  scroll-behavior: smooth;
-}
