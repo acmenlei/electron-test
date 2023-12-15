@@ -20,9 +20,10 @@
   </div>
 </template>
 
+
 <script lang="ts" setup>
 import { ipcRenderer } from "electron"
-import { ref } from "vue"
+import { onMounted, onUnmounted, ref } from "vue"
 
 const tags = ['链接', '自定义标签']
 
@@ -34,6 +35,27 @@ interface BoardFormat {
   active: string
 }
 const copiedBoard = ref<BoardFormat[]>([])
+
+// 键盘监听
+function handleKeyDown(event: any) {
+  console.log('执行')
+  // 检测是否按下了 Command 键 (Mac) 或 Ctrl 键 (Windows/Linux)
+  const isCommandOrCtrlKey = event.metaKey || event.ctrlKey;
+  // 检测是否按下了 'C' 键
+  const isCKey = event.key === 'c' || event.keyCode === 67;
+  // 如果同时按下了 Command/Ctrl 键和 'C' 键，则执行相应的操作
+  if (isCommandOrCtrlKey && isCKey) {
+    dbclick(copiedBoard.value[active.value].text)
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown)
+})
 
 function dbclick(copied?: string) {
   // 复制选中的内容
@@ -139,7 +161,8 @@ input:focus {
   min-height: calc(300px - 45px);
 }
 
-.list::-webkit-scrollbar {
+.list::-webkit-scrollbar,
+.board::-webkit-scrollbar {
   display: none;
 }
 

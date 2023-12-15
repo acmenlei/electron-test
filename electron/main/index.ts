@@ -12,7 +12,7 @@ import {
 import { release } from "node:os";
 import { join } from "node:path";
 import fs from "fs";
-import { User } from "../../src/db";
+// import { User } from "../../src/db";
 import clipBoardEvent from "clipboard-event";
 
 import { getActiveApplication, paste } from "../utils";
@@ -46,38 +46,48 @@ const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = join(process.env.DIST, "index.html");
 
 async function createWindow() {
-  setTimeout(async () => {
-    const value = await User.create({
-      username: "username" + Math.floor(Math.random() * 99999),
-      email: Math.floor(Math.random() * 99999) + "username@qq.com",
-    });
-    // const value = await User.User.findAll()
-    console.log(value.dataValues);
-  }, 1000);
+  // setTimeout(async () => {
+  //   const value = await User.create({
+  //     username: "username" + Math.floor(Math.random() * 99999),
+  //     email: Math.floor(Math.random() * 99999) + "username@qq.com",
+  //   });
+  //   console.log(value.dataValues);
+  // }, 1000);
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   // console.log(height)
   win = new BrowserWindow({
+    show: false,
     width: Math.floor(width),
     height: 320,
     resizable: false,
     frame: false,
-    darkTheme: true,
     title: "CopyPro",
     type: "textured",
-    // focusable: false,
-    hasShadow: false,
     icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
-    skipTaskbar: true, // 窗口是否不显示在任务栏上面
-    // alwaysOnTop: true, // 窗口置顶
+    hasShadow: true,
     transparent: true, // 窗口透明
+    skipTaskbar: true, // 窗口是否不显示在任务栏上面
+    alwaysOnTop: true, // 窗口置顶
     webPreferences: {
       preload,
       nodeIntegration: true,
       contextIsolation: false,
       backgroundThrottling: false, // 后台挂起的时候禁止一些操作
     },
-    show: false,
   });
+
+ function throttle(func, delay) {
+    let lastTime = 0;
+    return function (...args) {
+      const now = Date.now();
+      if (now - lastTime >= delay) {
+        func.apply(this, args);
+        lastTime = now;
+      }
+    };
+  }
+
+  // const fn 
   /* 快速唤出/隐藏快捷键 */
   globalShortcut.register("CommandOrControl+O", () => {
     // ipcMain.emit('toggle-window')
