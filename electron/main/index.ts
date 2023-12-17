@@ -93,8 +93,8 @@ async function createWindow() {
   });
   clipBoardEvent.startListening();
   clipBoardEvent.on("change", () => {
-    playSounds();
     // console.log("内容发生变更了");
+    playSounds();
     getClipBoardContent();
   });
   win.setBounds({ x: 0, y: height });
@@ -103,7 +103,7 @@ async function createWindow() {
   // app.dock && app.dock.hide()
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(url);
-    win.webContents.openDevTools();
+    // win.webContents.openDevTools();
   } else {
     win.loadFile(indexHtml);
   }

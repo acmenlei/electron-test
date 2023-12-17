@@ -9,15 +9,15 @@
       <sub style="margin-left: 10px; font-size: 15px; cursor: pointer;">+</sub>
     </div>
     <div class="list">
-      <div draggable="true" @contextmenu="contextMenu($event, idx)" @click="select(idx)"
+      <div  @contextmenu="contextMenu($event, idx)" @click="select(idx)"
         :class="{ active: active === idx }" @dblclick="dbclick(copied.text)" class="item"
         v-for="(copied, idx) in copiedBoard" :key="copied.text || copied.url">
         <div class="title">
           <p>内容来源：{{ copied.active }}</p>
-          <img src="/logo.png" style="position: absolute;right: 0;top: 0;">
+          <img src="/logo.png" class="app-logo" style="position: absolute;right: 0;top: 0;">
         </div>
-        <div class="content" v-if="copied.type === 'plain'" v-text="copied.text"></div>
-        <img v-else :src="copied.url" />
+        <div draggable="true" class="content" v-if="copied.type === 'plain'" v-text="copied.text"></div>
+        <img draggable="false" v-else :src="copied.url" />
       </div>
     </div>
   </div>
@@ -161,7 +161,7 @@ ipcRenderer.on('use-hot-key', (event, i: number) => {
 
 .board {
   padding: 10px;
-  background: rgb(241, 240, 240)
+  /* background: rgb(241, 240, 240) */
 }
 
 input {
@@ -213,7 +213,8 @@ input:focus {
   display: flex;
   overflow-x: scroll;
   overflow-y: hidden;
-  min-height: calc(300px - 45px);
+  height: 100%;
+  /* min-height: calc(300px - 45px); */
 }
 
 .list::-webkit-scrollbar,
@@ -262,9 +263,17 @@ input:focus {
 }
 
 .item img {
+  width: 100%;
+  height: 100%;
+  max-height: 160px;
+  min-width: 260px;
+  object-fit: contain;
+}
+
+.item .app-logo {
   width: 40px;
   height: 40px;
-  background: red;
+  min-width: 40px;
   object-fit: contain;
 }
 </style>

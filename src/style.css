@@ -1,5 +1,6 @@
 #app {
   animation: hide 0.12s ease-in-out forwards;
+  background: rgba(255, 255, 255, .9)
   /* width: 100%;
   height: 100%;
   transition: transform 0.15s ease-in-out; */
