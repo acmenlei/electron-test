@@ -1,5 +1,6 @@
 import robot from "robotjs";
 import { exec } from "child_process";
+import { app } from "electron";
 
 export async function getPreviousAppName() {}
 
@@ -61,4 +62,9 @@ export function getActiveApplication() {
       });
     }
   });
+}
+
+export function getAllAppIcons() {
+  const appPath = app.getAppPath()
+  console.log(appPath)
 }

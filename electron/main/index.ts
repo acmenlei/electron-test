@@ -14,15 +14,18 @@ import { playSounds } from "./sound";
 import { join } from "node:path";
 import fs from "fs";
 // import { User } from "../../src/db";
-import clipBoardEvent from "clipboard-event";
+import clipBoardEvent from "lx-clipboard-event";
+// import clipBoardEvent from "../utils/clipboardEvent";
 
-import { getActiveApplication, paste } from "../utils";
+import { getActiveApplication, getAllAppIcons, paste } from "../utils";
 
 process.env.DIST_ELECTRON = join(__dirname, "..");
 process.env.DIST = join(process.env.DIST_ELECTRON, "../dist");
 process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
   ? join(process.env.DIST_ELECTRON, "../public")
   : process.env.DIST;
+
+getAllAppIcons();
 
 app.disableHardwareAcceleration();
 // Disable GPU Acceleration for Windows 7
@@ -64,7 +67,8 @@ async function createWindow() {
     frame: false,
     title: "CopyPro",
     type: "textured",
-    icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
+    // icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
+    icon: "dist/logo.png",
     hasShadow: true,
     transparent: true, // 窗口透明
     skipTaskbar: true, // 窗口是否不显示在任务栏上面
@@ -90,7 +94,7 @@ async function createWindow() {
   clipBoardEvent.startListening();
   clipBoardEvent.on("change", () => {
     playSounds();
-    console.log("内容发生变更了");
+    // console.log("内容发生变更了");
     getClipBoardContent();
   });
   win.setBounds({ x: 0, y: height });
@@ -99,7 +103,7 @@ async function createWindow() {
   // app.dock && app.dock.hide()
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(url);
-    // win.webContents.openDevTools();
+    win.webContents.openDevTools();
   } else {
     win.loadFile(indexHtml);
   }

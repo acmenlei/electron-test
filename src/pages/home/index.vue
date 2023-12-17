@@ -14,7 +14,7 @@
         v-for="(copied, idx) in copiedBoard" :key="copied.text || copied.url">
         <div class="title">
           <p>内容来源：{{ copied.active }}</p>
-          <img src="/logo.png" style="position: absolute;right: -40%;top: 0;">
+          <img src="/logo.png" style="position: absolute;right: 0;top: 0;">
         </div>
         <div class="content" v-if="copied.type === 'plain'" v-text="copied.text"></div>
         <img v-else :src="copied.url" />
@@ -53,10 +53,21 @@ function handleKeyDown(event: any) {
   const isLeft = event.key === 'ArrowLeft'
   // 是否是右键
   const isRight = event.key === 'ArrowRight'
+  // 是否为删除键
+  const isDelete = event.key === 'Backspace'
+  // console.log(isDelete)
+
+  if (isDelete && copiedBoard.value.length) {
+    copiedBoard.value.splice(active.value, 1)
+    if (active.value === 0) {
+      return
+    }
+    active.value = (active.value - 1 + copiedBoard.value.length) % copiedBoard.value.length
+  }
 
   if (isLeft) {
     active.value = (active.value - 1 + copiedBoard.value.length) % copiedBoard.value.length
-   setTimeout(scrollToItem);
+    setTimeout(scrollToItem);
     return
   }
 
@@ -217,7 +228,6 @@ input:focus {
   width: 260px;
   cursor: pointer;
   border-radius: 5px;
-  padding-top: 40px;
   background: white;
   user-select: none;
   outline: 4px solid transparent;
@@ -226,11 +236,7 @@ input:focus {
 
 .title {
   background: #00b3ff;
-  position: absolute;
-  width: 100%;
   font-size: 13px;
-  top: 0;
-  left: 0;
   border-top-right-radius: 5px;
   border-top-left-radius: 5px;
   line-height: 40px;
@@ -240,11 +246,11 @@ input:focus {
 }
 
 .item .content {
-  width: 260px;
   padding: 5px;
   font-size: 12px;
-  height: 100%;
-  overflow: scroll;
+  width: 260px;
+  height: calc(100% - 50px);
+  overflow-y: scroll;
 }
 
 .item .content::-webkit-scrollbar {
@@ -256,9 +262,9 @@ input:focus {
 }
 
 .item img {
-  width: 100%;
-  min-width: 260px;
-  height: 100%;
+  width: 40px;
+  height: 40px;
+  background: red;
   object-fit: contain;
 }
 </style>
